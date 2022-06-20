@@ -30,7 +30,7 @@ class BloomFilter
         size = 0;
         try 
         {
-            md = MessageDigest.getInstance("MD5");
+             md = MessageDigest.getInstance("MD5");
         } 
         catch (NoSuchAlgorithmException e) 
         {
