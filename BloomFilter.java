@@ -2,7 +2,7 @@ import java.util.*;
 import java.security.*;
 import java.math.*;
 import java.nio.*;
- 
+
 class BloomFilter
 {    
     private byte[] set;
@@ -52,8 +52,8 @@ class BloomFilter
         md.update(bytes, 0, bytes.length);
         return Math.abs(new BigInteger(1, md.digest()).intValue()) % (set.length - 1);
     }
-    /* Function to add an object */
-    public void add(Object obj)
+
+ public void add(Object obj)
     {
         int[] tmpset = getSetArray(obj);
         for (int i : tmpset)
