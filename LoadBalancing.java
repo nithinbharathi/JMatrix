@@ -3,12 +3,12 @@
 import java.util.*;
 import java.io.*;
 
-public class Hash      {      
+public class LoadBalancing  {      
     public static String getServer()      
     {      
         // Reconstruct a Map to avoid concurrency problems caused by the server's upload and download.
         Map<String, Integer> serverMap =  new HashMap<String, Integer>();      
-        serverMap.putAll(IpMap.serverWeightMap);      
+       // serverMap.putAll(IpMap.serverWeightMap);      
 
         // Get the Ip address List
         Set<String> keySet = serverMap.keySet();      
@@ -24,13 +24,13 @@ public class Hash      {
     }      
 }
 
-public class WeightRoundRobin   {   
+ class WeightRoundRobin   {   
     private static Integer pos;   
 
     public static String getServer()   
     {   
         Map<String, Integer> serverMap = new HashMap<String, Integer>();   
-        serverMap.putAll(IpMap.serverWeightMap);   
+       // serverMap.putAll(IpMap.serverWeightMap);   
 
         // Get the Ip address List 
         Set<String> keySet = serverMap.keySet();   

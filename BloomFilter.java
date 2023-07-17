@@ -78,7 +78,7 @@ class BloomFilter
     }    
 }
  
-public class BloomFilterTest
+class BloomFilterTest
 {
     public static void main(String[] args)
     {
