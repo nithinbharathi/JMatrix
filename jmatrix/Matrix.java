@@ -1,5 +1,6 @@
 package jmatrix;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -7,25 +8,27 @@ import java.util.Arrays;
  * @author : Nithin Bharathi 17-Jul-2023
  */
 
-public class Matrix{
+public class Matrix<T extends Number>{
 	
-	long mat[][];
+	T mat[][];
 	int colSize,rowSize;
-	long res[][];
+	T res[][];
+	private int arrayDimensions[];
 	private int threadCapacity = Math.max(1, Runtime.getRuntime().availableProcessors()-1);
 	StringBuilder matrixRepresentation = null;
 	
 	ArrayList<Thread>threadPool;
 	
-	public Matrix(long mat[],int rowSize, int colSize){		
+	public Matrix(T mat[],int rowSize, int colSize){		
 		this.colSize = colSize;
 		this.rowSize = rowSize;
+		this.arrayDimensions = setArrayDimensions(rowSize,colSize);
 		this.mat = transform(mat);
 	}
 	
-	private long[][] transform(long mat[]){
+	private T[][] transform(T mat[]){
 		validateDimensions(mat.length);
-		long matrix[][] = new long[rowSize][colSize];
+		T matrix[][] = (T[][])Array.newInstance(mat.getClass().getComponentType(), arrayDimensions);
 		int row = 0,col=0;
 		for(int i = 0;i<mat.length;i++){
 			matrix[row][col++] = mat[i];
@@ -33,6 +36,12 @@ public class Matrix{
 			row = col==0?row+1:row;
 		}
 		return matrix;
+	}
+	private int[] setArrayDimensions(int rowSize,int colSize){
+		return new int[]{rowSize,colSize};
+	}
+	private T[][] getArray(Class<?> componentType,int dimensions[]){
+		return (T[][])Array.newInstance(componentType, dimensions);
 	}
 	private void validateDimensions(int len){
 		if(rowSize*colSize != len || len == 0){
@@ -76,25 +85,33 @@ public class Matrix{
 	private boolean requiresBroadcasting(Matrix mat){
 		return true;
 	}
-	private Matrix boradCast(Matrix mat){
+	private Matrix broadCast(Matrix mat){
 		return mat;
 	}
 	
-	public long sum(){
+	public double sum(){
 		long sum = 0;
 		for(int i = 0;i<rowSize;i++){
-			sum+=Arrays.stream(mat[i]).sum();
+			for(int j = 0;j<colSize;j++){
+				sum+= res[i][j].doubleValue();
+			}
 		}
 		return sum;
 	}
 	
 	public void multiply(Matrix other){
+		initializeResultantMatrix(other);
 		for(int i = 0;i<rowSize;i++){
 			for(int j = 0;j<colSize;j++){
 				for(int z = 0;z<colSize;z++){
-					res[i][j]+=res[i][z]*res[z][i];
+				//	res[i][j] = res[i][j].doubleValue()*res[j][i].doubleValue();
 				}
 			}
+		}
+	}
+	private void initializeResultantMatrix(Matrix other){
+		if(res == null){
+			res = getArray(other.getClass().getComponentType(), new int[]{rowSize,other.colSize});
 		}
 	}
 	
@@ -152,7 +169,8 @@ public class Matrix{
 		public void run() {
 			for(int col = 0;col<mat1.colSize;col++){
 				for(int itr = 0;itr<mat1.colSize;itr++){
-					mat1.res[row][col] = mat1.mat[row][itr]*mat2.mat[itr][col];
+					mat1.res[row][col]= mat1.res[row][col].doubleValue() +
+										(mat1.mat[row][itr].doubleValue()*mat2.mat[itr][col].doubleValue());
 				}
 			}
 		}
