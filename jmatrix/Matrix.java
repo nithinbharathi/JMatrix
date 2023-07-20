@@ -5,16 +5,48 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
+ * This class contains various methods for performing numerical 
+ * calculations on 2 dimensional arrays. Some of the operations 
+ * support parallelism for faster computation by utilizing multiple
+ * threads available during runtime. The class is applicable to only
+ * Numerical types that extend the Number class in java (Integer, 
+ * Long, Float, Double).
+ *  
  * @author : Nithin Bharathi 17-Jul-2023
  */
 
 public class Matrix<T extends Number>{
-	
+	/**
+	 * The array buffer into which elements of the Matrix
+	 * are stored. The capacity of the array depends on the
+	 * input dimensions provided by the user during instantiation.
+	 */
 	T mat[][];
+	
+	/**
+	 * The dimensions of the Matrix.
+	 */
 	int colSize,rowSize;
+	
+	/**
+	 * Array buffer used to store the result of the matrix operations 
+	 * performed on the Matrix objects.
+	 */
 	T res[][];
+	
+	
 	private int arrayDimensions[];
+	
+	/**
+	 * runtime available count to determine the number of the threads that could
+	 * possibly be created to speed of parallel calculations.
+	 */
 	private int threadCapacity = Math.max(1, Runtime.getRuntime().availableProcessors()-1);
+	
+	/**
+	 * a static string representation of the 2 dimensional array that is computed only once.
+	 * Primarily used when the view method is invoked on Matrix object.
+	 */
 	StringBuilder matrixRepresentation = null;
 	
 	ArrayList<Thread>threadPool;
