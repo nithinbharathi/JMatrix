@@ -10,7 +10,7 @@ import java.util.Arrays;
  * support parallelism for faster computation by utilizing multiple
  * threads available during runtime. The class is applicable to only
  * Numerical types that extend the Number class in java (Integer, 
- * Long, Float, Double).
+ * Long, Float, and Double).
  *  
  * @author : Nithin Bharathi 17-Jul-2023
  */
@@ -58,9 +58,13 @@ public class Matrix<T extends Number>{
 		this.mat = transform(mat);
 	}
 	
+	/**
+	 * Converts a linear array of numbers into a matrix with dimensions specified 
+	 * by the user during the time of instantiation.
+	 */
 	private T[][] transform(T mat[]){
 		validateDimensions(mat.length);
-		T matrix[][] = (T[][])Array.newInstance(mat.getClass().getComponentType(), arrayDimensions);
+		T matrix[][] = getArray(mat.getClass().getComponentType(), arrayDimensions);
 		int row = 0,col=0;
 		for(int i = 0;i<mat.length;i++){
 			matrix[row][col++] = mat[i];
@@ -69,12 +73,24 @@ public class Matrix<T extends Number>{
 		}
 		return matrix;
 	}
+	
+	/**
+	 * sets the array dimensions that are later used to create a new instance at runtime.
+	 */
 	private int[] setArrayDimensions(int rowSize,int colSize){
 		return new int[]{rowSize,colSize};
 	}
+	
+	/**
+	 * returns a 2 dimensional array based on the type of class instantiated at runtime.
+	 */
 	private T[][] getArray(Class<?> componentType,int dimensions[]){
 		return (T[][])Array.newInstance(componentType, dimensions);
 	}
+	
+	/**
+	 * checks if the matrix could be represented using the specified dimensions 
+	 */
 	private void validateDimensions(int len){
 		if(rowSize*colSize != len || len == 0){
 			try {
@@ -85,6 +101,11 @@ public class Matrix<T extends Number>{
 			}
 		}
 	}
+	
+	/**
+	 * constructs a matrix representational view of the Matrix object. Note that the running time of this 
+	 * method is always constant after the first time this method is invoked. The first invocation costs O(N).
+	 */
 	public StringBuilder view(){
 		if(matrixRepresentation == null){
 			matrixRepresentation = new StringBuilder();
