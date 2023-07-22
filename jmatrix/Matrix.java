@@ -32,7 +32,7 @@ public class Matrix<T extends Number>{
 	 * Array buffer used to store the result of the matrix operations 
 	 * performed on the Matrix objects.
 	 */
-	T res[][];
+	private double res[][];
 	
 	
 	private int arrayDimensions[];
@@ -120,6 +120,10 @@ public class Matrix<T extends Number>{
 		return matrixRepresentation;
 	}
 	
+	public String result(){
+		return Arrays.deepToString(res);
+	}
+	
 /*	public void add(Matrix other){	
 		Matrix broadcastedOther,broadcastedCurrent;
 		if(requiresBroadcasting(other)){
@@ -143,21 +147,16 @@ public class Matrix<T extends Number>{
 	}
 	
 	public double sum(){
-		long sum = 0;
-		for(int i = 0;i<rowSize;i++){
-			for(int j = 0;j<colSize;j++){
-				sum += res[i][j].doubleValue();
-			}
-		}
-		return sum;
+		
+		return Arrays.stream(res).mapToDouble(x->x[0]).sum();
 	}
 	
 	public void multiply(Matrix other){
-		res = (T[][])Array.newInstance(other.mat.getClass().getComponentType(), new int[]{rowSize,other.colSize});
+		res = new double[rowSize][other.colSize];
 		for(int i = 0;i<rowSize;i++){
-			for(int j = 0;j<colSize;j++){
+			for(int j = 0;j<other.colSize;j++){
 				for(int z = 0;z<colSize;z++){
-					//res[i][j] = other.mat[i][j].doubleValue();
+					res[i][j] += mat[i][z].doubleValue() *other.mat[z][j].doubleValue();
 				}
 			}
 		}
@@ -222,8 +221,7 @@ public class Matrix<T extends Number>{
 		public void run() {
 			for(int col = 0;col<mat1.colSize;col++){
 				for(int itr = 0;itr<mat1.colSize;itr++){
-					mat1.res[row][col]= mat1.res[row][col].doubleValue() +
-										(mat1.mat[row][itr].doubleValue()*mat2.mat[itr][col].doubleValue());
+					mat1.res[row][col] += (mat1.mat[row][itr].doubleValue()*mat2.mat[itr][col].doubleValue());
 				}
 			}
 		}
