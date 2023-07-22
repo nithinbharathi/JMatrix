@@ -146,27 +146,27 @@ public class Matrix<T extends Number>{
 		long sum = 0;
 		for(int i = 0;i<rowSize;i++){
 			for(int j = 0;j<colSize;j++){
-				sum+= res[i][j].doubleValue();
+				sum += res[i][j].doubleValue();
 			}
 		}
 		return sum;
 	}
 	
 	public void multiply(Matrix other){
-		initializeResultantMatrix(other);
+		res = (T[][])Array.newInstance(other.mat.getClass().getComponentType(), new int[]{rowSize,other.colSize});
 		for(int i = 0;i<rowSize;i++){
 			for(int j = 0;j<colSize;j++){
 				for(int z = 0;z<colSize;z++){
-				//	res[i][j] = res[i][j].doubleValue()*res[j][i].doubleValue();
+					//res[i][j] = other.mat[i][j].doubleValue();
 				}
 			}
 		}
 	}
-	private void initializeResultantMatrix(Matrix other){
+	/*private void initializeResultantMatrix(Matrix other){
 		if(res == null){
-			res = getArray(other.getClass().getComponentType(), new int[]{rowSize,other.colSize});
+			res = getArray(other.mat.getClass().getComponentType(), new int[]{rowSize,other.colSize});
 		}
-	}
+	}*/
 	
 	public void parallelMultiply(Matrix other){
 		
