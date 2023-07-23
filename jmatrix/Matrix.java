@@ -34,6 +34,12 @@ public class Matrix<T extends Number>{
 	 */
 	private double res[][];
 	
+	/**
+	 * Holds the value in nanoseconds for the amount of time spent on a 
+	 * numerical operation.
+	 */
+	public long timeTaken;
+	
 	
 	private int arrayDimensions[];
 	
@@ -120,8 +126,13 @@ public class Matrix<T extends Number>{
 		return matrixRepresentation;
 	}
 	
-	public String result(){
-		return Arrays.deepToString(res);
+	public void result(){
+		for(int i = 0;i<res.length;i++){
+			for(int j = 0;j<res[0].length;j++){
+				System.out.print(res[i][j]+" ");
+			}
+			System.out.println();
+		}
 	}
 	
 /*	public void add(Matrix other){	
@@ -153,13 +164,16 @@ public class Matrix<T extends Number>{
 	
 	public void multiply(Matrix other){
 		res = new double[rowSize][other.colSize];
-		for(int i = 0;i<rowSize;i++){
-			for(int j = 0;j<other.colSize;j++){
-				for(int z = 0;z<colSize;z++){
+		long startTime = System.nanoTime();
+		for(int i = 0;i<rowSize;i++){			
+			for(int z = 0;z<colSize;z++){
+				for(int j = 0;j<other.colSize;j++){
 					res[i][j] += mat[i][z].doubleValue() *other.mat[z][j].doubleValue();
 				}
 			}
 		}
+		long endTime = System.nanoTime();
+		timeTaken = endTime-startTime;
 	}
 	/*private void initializeResultantMatrix(Matrix other){
 		if(res == null){
@@ -168,9 +182,9 @@ public class Matrix<T extends Number>{
 	}*/
 	
 	public void parallelMultiply(Matrix other){
-		
+		res = new double[rowSize][other.colSize];
 		if(threadPool == null)threadPool = new ArrayList<>();
-		
+		long startTime = System.nanoTime();
 		for(int i = 0;i<rowSize;i++){
 			MultiplierTask rangeArithmeticObj = new MultiplierTask(this,other,i);
 			Thread thread = new Thread(rangeArithmeticObj);
@@ -180,6 +194,8 @@ public class Matrix<T extends Number>{
 				waitForThreads(threadPool);
 			}
 		}
+		long endTime = System.nanoTime();
+		timeTaken = endTime-startTime;
 	}
 	
 	//todo
@@ -209,8 +225,8 @@ public class Matrix<T extends Number>{
 	
 	private class MultiplierTask implements Runnable{
 		
-		Matrix mat1 , mat2;
-		int row;
+		private Matrix mat1 , mat2;
+		private int row;
 		public MultiplierTask(Matrix mat1, Matrix mat2, int row){
 			this.mat1 = mat1;
 			this.mat2 = mat2;
@@ -218,9 +234,9 @@ public class Matrix<T extends Number>{
 		}
 
 		@Override
-		public void run() {
-			for(int col = 0;col<mat1.colSize;col++){
-				for(int itr = 0;itr<mat1.colSize;itr++){
+		public void run() {			
+			for(int itr = 0;itr<mat1.colSize;itr++){
+				for(int col = 0;col<mat1.colSize;col++){
 					mat1.res[row][col] += (mat1.mat[row][itr].doubleValue()*mat2.mat[itr][col].doubleValue());
 				}
 			}
