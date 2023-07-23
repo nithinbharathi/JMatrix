@@ -40,6 +40,10 @@ public class Matrix<T extends Number>{
 	 */
 	public long timeTaken;
 	
+	/**
+	 * Interal counters that record the start and end time of an arithmetic operation
+	 */
+	private long startTime,endTime;
 	
 	private int arrayDimensions[];
 	
@@ -158,33 +162,47 @@ public class Matrix<T extends Number>{
 	}
 	
 	public double sum(){
-		
-		return Arrays.stream(res).mapToDouble(x->x[0]).sum();
+		startCounter();
+		double sum = Arrays.stream(res).parallel().mapToDouble(x->x[0]).sum();
+		stopCounter();
+		setTimeTaken();
+		return sum;
 	}
 	
 	public void multiply(Matrix other){
-		res = new double[rowSize][other.colSize];
-		long startTime = System.nanoTime();
+		initializeResultantMatrix(other);
+		startCounter();
 		for(int i = 0;i<rowSize;i++){			
 			for(int z = 0;z<colSize;z++){
 				for(int j = 0;j<other.colSize;j++){
-					res[i][j] += mat[i][z].doubleValue() *other.mat[z][j].doubleValue();
+					res[i][j] += mat[i][z].doubleValue() * other.mat[z][j].doubleValue();
 				}
 			}
 		}
-		long endTime = System.nanoTime();
+		stopCounter(); 
+		setTimeTaken();
+	}
+	
+	private void startCounter(){
+		startTime = System.nanoTime();
+	}
+	
+	private void stopCounter(){
+		endTime = System.nanoTime();
+	}
+	
+	private void setTimeTaken(){
 		timeTaken = endTime-startTime;
 	}
-	/*private void initializeResultantMatrix(Matrix other){
-		if(res == null){
-			res = getArray(other.mat.getClass().getComponentType(), new int[]{rowSize,other.colSize});
-		}
-	}*/
+	
+	private void initializeResultantMatrix(Matrix other){
+		res = new double[rowSize][other.colSize];
+	}
 	
 	public void parallelMultiply(Matrix other){
-		res = new double[rowSize][other.colSize];
+		initializeResultantMatrix(other);
 		if(threadPool == null)threadPool = new ArrayList<>();
-		long startTime = System.nanoTime();
+		startCounter();
 		for(int i = 0;i<rowSize;i++){
 			MultiplierTask rangeArithmeticObj = new MultiplierTask(this,other,i);
 			Thread thread = new Thread(rangeArithmeticObj);
@@ -194,8 +212,9 @@ public class Matrix<T extends Number>{
 				waitForThreads(threadPool);
 			}
 		}
-		long endTime = System.nanoTime();
-		timeTaken = endTime-startTime;
+		stopCounter();
+		setTimeTaken();
+		
 	}
 	
 	//todo
