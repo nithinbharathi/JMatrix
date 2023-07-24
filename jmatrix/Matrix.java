@@ -255,7 +255,7 @@ public class Matrix<T extends Number>{
 		@Override
 		public void run() {			
 			for(int itr = 0;itr<mat1.colSize;itr++){
-				for(int col = 0;col<mat1.colSize;col++){
+				for(int col = 0;col<mat2.colSize;col++){
 					mat1.res[row][col] += (mat1.mat[row][itr].doubleValue()*mat2.mat[itr][col].doubleValue());
 				}
 			}
