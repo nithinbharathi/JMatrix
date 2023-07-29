@@ -160,7 +160,10 @@ public class Matrix<T extends Number>{
 	private Matrix broadCast(Matrix mat){
 		return mat;
 	}
-	
+	private void createOrResetThreadPool(){		
+		if(threadPool == null)threadPool = new ArrayList<>();
+		threadPool.clear();
+	}
 	public double sum(){
 		startCounter();
 		double sum = Arrays.stream(res).parallel().mapToDouble(x->x[0]).sum();
@@ -183,6 +186,15 @@ public class Matrix<T extends Number>{
 		setTimeTaken();
 	}
 	
+	public void add(Matrix other){
+		res = new double[rowSize][colSize];
+		for(int i =0;i<rowSize;i++){
+			for(int j =0;j<colSize;j++){
+				res[i][j] = mat[i][j].doubleValue() + other.mat[i][j].doubleValue();
+			}
+		}
+	}
+	
 	private void startCounter(){
 		startTime = System.nanoTime();
 	}
@@ -199,9 +211,14 @@ public class Matrix<T extends Number>{
 		res = new double[rowSize][other.colSize];
 	}
 	
-	public void parallelMultiply(Matrix other){
+	private void parallelTaskSetup(Matrix other){
 		initializeResultantMatrix(other);
-		if(threadPool == null)threadPool = new ArrayList<>();
+		createOrResetThreadPool();
+	}
+	
+	public void parallelMultiply(Matrix other){
+		parallelTaskSetup(other);
+
 		startCounter();
 		for(int i = 0;i<rowSize;i++){
 			MultiplierTask rangeArithmeticObj = new MultiplierTask(this,other,i);
@@ -209,7 +226,7 @@ public class Matrix<T extends Number>{
 			threadPool.add(thread);
 			thread.start();
 			if(threadPool.size()  == threadCapacity){
-				waitForThreads(threadPool);
+				waitForThreads();
 			}
 		}
 		stopCounter();
@@ -217,8 +234,24 @@ public class Matrix<T extends Number>{
 		
 	}
 	
-	//todo
+	
 	public void parallelAdd(Matrix other){
+		parallelTaskSetup(other);
+		startCounter();
+		for(int row = 0;row<rowSize;row++){
+			additionTask additionParams = new additionTask(this,other, row);
+			
+			if(threadPool.size()<threadCapacity){
+				Thread additionThread = new Thread(additionParams);
+				additionThread.start();
+				threadPool.add(additionThread);
+			}else{
+				waitForThreads();
+			}
+			
+		}
+		stopCounter();
+		setTimeTaken();
 		
 	}
 	
@@ -232,14 +265,15 @@ public class Matrix<T extends Number>{
 		
 	}
 	
-	private void waitForThreads(ArrayList<Thread> threads){
-		for(Thread thread: threads){
+	private void waitForThreads(){
+		for(Thread thread: threadPool){
 			try {
 				thread.join();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
+		createOrResetThreadPool();
 	}
 	
 	private class MultiplierTask implements Runnable{
@@ -258,6 +292,22 @@ public class Matrix<T extends Number>{
 				for(int col = 0;col<mat2.colSize;col++){
 					mat1.res[row][col] += (mat1.mat[row][itr].doubleValue()*mat2.mat[itr][col].doubleValue());
 				}
+			}
+		}
+		
+	}
+	private class additionTask implements Runnable{
+		private Matrix mat1,mat2;
+		private int row;
+		public additionTask(Matrix mat1, Matrix mat2, int row){
+			this.mat1 = mat1;
+			this.mat2 = mat2;
+			this.row = row;
+		}
+		@Override
+		public void run() {
+			for(int col = 0;col<mat1.colSize;col++){
+				mat1.res[row][col] = mat1.mat[row][col].doubleValue() + mat2.mat[row][col].doubleValue();
 			}
 		}
 		
