@@ -59,7 +59,7 @@ public class Matrix<T extends Number>{
 	 */
 	StringBuilder matrixRepresentation = null;
 	
-	ArrayList<Thread>threadPool;
+	private ArrayList<Thread>threadPool;
 	
 	public Matrix(T mat[],int rowSize, int colSize){		
 		this.colSize = colSize;
@@ -131,6 +131,10 @@ public class Matrix<T extends Number>{
 	}
 	
 	public void result(){
+		if(res == null){
+			System.out.println("Resultant matrix is empty because no arithmetic operation was performed for this object");
+			return;
+		}
 		for(int i = 0;i<res.length;i++){
 			for(int j = 0;j<res[0].length;j++){
 				System.out.print(res[i][j]+" ");
@@ -154,12 +158,20 @@ public class Matrix<T extends Number>{
 		}
 	}*/
 	
+	private boolean isBroadcastable(Matrix mat){
+		if(mat.colSize == colSize){
+			return mat.rowSize == 1 || rowSize == 1;
+		}else if(mat.rowSize == rowSize) {
+			return colSize == 1 || mat.colSize == 1;
+		}
+			
+		return false;
+	}
+	
 	private boolean requiresBroadcasting(Matrix mat){
-		return true;
+		return rowSize != mat.rowSize  || colSize != mat.colSize;
 	}
-	private Matrix broadCast(Matrix mat){
-		return mat;
-	}
+	
 	private void createOrResetThreadPool(){		
 		if(threadPool == null)threadPool = new ArrayList<>();
 		threadPool.clear();
@@ -173,7 +185,14 @@ public class Matrix<T extends Number>{
 	}
 	
 	public void multiply(Matrix other){
+		
 		initializeResultantMatrix(other);
+		
+		if(requiresBroadcasting(other)){
+			broadcastedMultiplication(other);
+			return;
+		}
+		
 		startCounter();
 		for(int i = 0;i<rowSize;i++){			
 			for(int z = 0;z<colSize;z++){
@@ -186,7 +205,55 @@ public class Matrix<T extends Number>{
 		setTimeTaken();
 	}
 	
+	private void logBroadcastException(){
+		try {
+			throw new Exception("Operands cannot be broadcasted");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	private void broadcastedMultiplication(Matrix other){
+		if(!isBroadcastable(other)){
+			logBroadcastException();
+			return;
+		}
+		
+
+	}
+	private void broadcastedAddition(Matrix mat1,Matrix mat2){
+		if(!isBroadcastable(mat1)){
+			logBroadcastException();
+			return;
+		}
+		if(mat1.rowSize != 1 || mat1.colSize != 1)broadcastedAddition(mat2,mat1);
+		
+		if(mat1.rowSize == 1){
+			res = new double[mat2.rowSize][mat2.colSize];
+			for(int i = 0;i<mat2.rowSize;i++){
+				for(int j = 0;j<mat2.colSize;j++){
+					res[i][j] = mat2.mat[i][j].doubleValue() + mat1.mat[0][j].doubleValue();
+				}
+			}
+		}else{
+			res = new double[mat2.rowSize][mat2.colSize];
+			for(int i = 0;i<mat2.colSize;i++){
+				for(int j = 0;j<mat2.rowSize;j++){
+					res[j][i] = mat2.mat[j][i].doubleValue() + mat1.mat[j][0].doubleValue();
+				}
+			}
+		}
+		
+	}
+	
 	public void add(Matrix other){
+		
+		
+		if(requiresBroadcasting(other)){
+			broadcastedAddition(other,this);
+			return;
+		}
 		res = new double[rowSize][colSize];
 		for(int i =0;i<rowSize;i++){
 			for(int j =0;j<colSize;j++){
@@ -213,7 +280,7 @@ public class Matrix<T extends Number>{
 	
 	private void parallelTaskSetup(Matrix other){
 		initializeResultantMatrix(other);
-		createOrResetThreadPool();
+		
 	}
 	
 	public void parallelMultiply(Matrix other){
@@ -231,6 +298,7 @@ public class Matrix<T extends Number>{
 		}
 		stopCounter();
 		setTimeTaken();
+		createOrResetThreadPool();
 		
 	}
 	
@@ -272,8 +340,7 @@ public class Matrix<T extends Number>{
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-		}
-		createOrResetThreadPool();
+		}		
 	}
 	
 	private class MultiplierTask implements Runnable{
