@@ -188,15 +188,12 @@ public class Matrix<T extends Number>{
 		return sum;
 	}
 	
-	public void multiply(Matrix other){
-		
-		initializeResultantMatrix(other);
-		
+	public void multiply(Matrix other){		
+		initializeResultantMatrix(this.rowSize,other.colSize);		
 		if(requiresBroadcasting(other)){
 			broadcastedMultiplication(other);
 			return;
-		}
-		
+		}		
 		startCounter();
 		for(int i = 0;i<rowSize;i++){			
 			for(int z = 0;z<colSize;z++){
@@ -238,7 +235,9 @@ public class Matrix<T extends Number>{
 		
 		int row = Math.max(mat1.rowSize,mat2.rowSize);
 		int col  = Math.max(mat1.colSize, mat2.colSize);
-		res  = new double[row][col];
+		
+		initializeResultantMatrix(row,col);
+		
 		if(mat1.rowSize == 1){
 			for(int i = 0;i<mat2.rowSize;i++){
 				for(int j = 0;j<mat2.colSize;j++){
@@ -255,14 +254,12 @@ public class Matrix<T extends Number>{
 		
 	}
 	
-	public void add(Matrix other){
-		
-		
+	public void add(Matrix other){			
 		if(requiresBroadcasting(other)){
 			broadcastedAddition(other,this);
 			return;
-		}
-		res = new double[rowSize][colSize];
+		}		
+		initializeResultantMatrix(rowSize,colSize);
 		for(int i =0;i<rowSize;i++){
 			for(int j =0;j<colSize;j++){
 				res[i][j] = mat[i][j].doubleValue() + other.mat[i][j].doubleValue();
@@ -282,12 +279,12 @@ public class Matrix<T extends Number>{
 		timeTaken = endTime-startTime;
 	}
 	
-	private void initializeResultantMatrix(Matrix other){
-		res = new double[rowSize][other.colSize];
+	private void initializeResultantMatrix(int row, int col){
+		res = new double[row][col];
 	}
 	
 	private void parallelTaskSetup(Matrix other){
-		initializeResultantMatrix(other);
+		initializeResultantMatrix(other.rowSize,other.colSize);
 		
 	}
 	
