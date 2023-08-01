@@ -116,20 +116,24 @@ public class Matrix<T extends Number>{
 	 * constructs a matrix representational view of the Matrix object. Note that the running time of this 
 	 * method is always constant after the first time this method is invoked. The first invocation costs O(N).
 	 */
-	public StringBuilder view(){
-		if(matrixRepresentation == null){
-			matrixRepresentation = new StringBuilder();
-			for(int i =0;i<rowSize;i++){
-				for(int j =0;j<colSize;j++){
-					matrixRepresentation.append(mat[i][j]);
-					matrixRepresentation.append(" ");
-				}
-				matrixRepresentation.append("\n");
+	public void view(){	
+		if(matrixRepresentation == null)buildMatrix();
+		
+		System.out.println(matrixRepresentation);
+		
+	}
+	
+	private StringBuilder buildMatrix(){
+		matrixRepresentation = new StringBuilder();
+		for(int i =0;i<rowSize;i++){
+			for(int j =0;j<colSize;j++){
+				matrixRepresentation.append(mat[i][j]);
+				matrixRepresentation.append(" ");
 			}
+			matrixRepresentation.append("\n");
 		}
 		return matrixRepresentation;
 	}
-	
 	public void result(){
 		if(res == null){
 			System.out.println("Resultant matrix is empty because no arithmetic operation was performed for this object");
@@ -158,11 +162,11 @@ public class Matrix<T extends Number>{
 		}
 	}*/
 	
-	private boolean isBroadcastable(Matrix mat){
-		if(mat.colSize == colSize){
-			return mat.rowSize == 1 || rowSize == 1;
-		}else if(mat.rowSize == rowSize) {
-			return colSize == 1 || mat.colSize == 1;
+	private boolean isBroadcastable(Matrix other){
+		if(other.colSize == colSize){
+			return other.rowSize == 1 || this.rowSize == 1;
+		}else if(other.rowSize == rowSize) {
+			return this.colSize == 1 || other.colSize == 1;
 		}
 			
 		return false;
@@ -227,17 +231,21 @@ public class Matrix<T extends Number>{
 			logBroadcastException();
 			return;
 		}
-		if(mat1.rowSize != 1 || mat1.colSize != 1)broadcastedAddition(mat2,mat1);
+		if(mat1.rowSize != 1 && mat1.colSize != 1){
+			broadcastedAddition(mat2,mat1);
+			return;
+		}
 		
+		int row = Math.max(mat1.rowSize,mat2.rowSize);
+		int col  = Math.max(mat1.colSize, mat2.colSize);
+		res  = new double[row][col];
 		if(mat1.rowSize == 1){
-			res = new double[mat2.rowSize][mat2.colSize];
 			for(int i = 0;i<mat2.rowSize;i++){
 				for(int j = 0;j<mat2.colSize;j++){
 					res[i][j] = mat2.mat[i][j].doubleValue() + mat1.mat[0][j].doubleValue();
 				}
 			}
 		}else{
-			res = new double[mat2.rowSize][mat2.colSize];
 			for(int i = 0;i<mat2.colSize;i++){
 				for(int j = 0;j<mat2.rowSize;j++){
 					res[j][i] = mat2.mat[j][i].doubleValue() + mat1.mat[j][0].doubleValue();

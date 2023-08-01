@@ -38,7 +38,8 @@ public static void main(String[] args) {
 	Matrix<Integer> mat2 = new Matrix<>(b,10,10);
 			
 //testing the package operations
-	System.out.println(mat1.view()+" "+mat2.view());
+	mat1.view();
+	mat2.view();
 	mat1.multiply(mat2);
 	System.out.printf("%.8f\n",mat1.timeTaken/1e9);
 	mat1.parallelMultiply(mat2);
