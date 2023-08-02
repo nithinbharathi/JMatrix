@@ -188,7 +188,7 @@ public class Matrix<T extends Number>{
 	}
 	
 	/**
-	 * adds the given scalar to all the elements of the matrix.
+	 * adds the given scalar to all the elements of the matrix and returns a new instance.
 	 */
 	public <E extends Number>Matrix add(E scalarValue){
 		initializeResultantMatrix(rowSize,colSize);
