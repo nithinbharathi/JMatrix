@@ -352,10 +352,6 @@ public class Matrix<T extends Number>{
 		res = new Double[row][col];
 	}
 	
-	private void parallelTaskSetup(Matrix other){
-		initializeResultantMatrix(other.rowSize,other.colSize);
-		
-	}
 	private boolean hasReachedProcessorCapacity(){
 		return threadPool.size()  == processorCapacity;
 	}
@@ -370,7 +366,7 @@ public class Matrix<T extends Number>{
 	 * that operate on the matrix is determined by the number of processors that system has.
 	 */
 	public void parallelMultiply(Matrix other){
-		parallelTaskSetup(other);
+		initializeResultantMatrix(other.rowSize,other.colSize);
 		startCounter();
 		
 		for(int i = 0;i<rowSize;i++){
@@ -391,7 +387,7 @@ public class Matrix<T extends Number>{
 	
 	
 	public void parallelAdd(Matrix other){
-		parallelTaskSetup(other);
+		initializeResultantMatrix(other.rowSize,other.colSize);
 		startCounter();
 		
 		for(int row = 0;row<rowSize;row++){
