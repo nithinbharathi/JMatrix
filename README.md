@@ -1,6 +1,6 @@
 ## JMatrix
 
-JMatrix is a lightweight java package that is designed for working with 2 dimensional matrices efficiently. It supports parallel computations for Numerical calculations like multiplications using the concept of multithreading to improve the running time. The implementation also takes into account spatial locality to avoid unnecessary cache miss.The class currently supports all the wrapper classes that extend the Number class in java and it makes use of bounded generics to enforce type check during compile time. 
+JMatrix is a lightweight java package that is designed for working with 2 dimensional matrices efficiently. It supports parallel computations for Numerical calculations like multiplications using the concept of multithreading to improve the running time. The implementation also takes into account spatial locality to avoid unnecessary cache miss.The class currently supports all the wrapper classes that extend the Number class in java and it makes use of bounded generics to enforce type check during compile time. Additionally, the current implementation of the arithmetic operations (non-parallel) supports broadcasting similar to numpy by allowing different matrix shapes to be involved in the computation if they satisfy the broadcasting rules. 
 
 ## Current Benchmarks
 
@@ -27,7 +27,7 @@ public class JTest{
 public static void main(String[] args) {
 	int n  = 100;
 	Integer a[] = new Integer[n];
-	Integer b[] = new Integer[n];
+	Integer b[] = new Integer[n];	
 	for(int i =0;i<n;i++){
 		a[i] = 1;
 		b[i] = 1;
@@ -36,6 +36,7 @@ public static void main(String[] args) {
 //creating the matrix objects
 	Matrix<Integer> mat1 = new Matrix<>(a,10,10);
 	Matrix<Integer> mat2 = new Matrix<>(b,10,10);
+	Matrix<Integer>mat = new Matrix<>(c);
 			
 //testing the package operations
 	mat1.view();
