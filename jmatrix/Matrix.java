@@ -3,13 +3,14 @@ package jmatrix;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Optional;
 
 /**
  * This class contains various methods for performing numerical 
  * calculations on 2 dimensional arrays. Some of the operations 
  * support parallelism for faster computation by utilizing multiple
- * threads available during runtime. The class is applicable to only
- * Numerical types that extend the Number class in java (Integer, 
+ * threads available during runtime. The class is applicable to all
+ * the Numerical types that extend the Number class in java (Integer, 
  * Long, Float, and Double).
  *  
  * @author : Nithin Bharathi 17-Jul-2023
@@ -190,17 +191,17 @@ public class Matrix<T extends Number>{
 	/**
 	 * adds the given scalar to all the elements of the matrix and returns a new instance.
 	 */
-	public <E extends Number>Matrix add(E scalarValue){
+	public <E extends Number>Matrix<Double> add(E scalarValue){
 		initializeResultantMatrix(rowSize,colSize);
 		for(int row = 0;row<rowSize;row++){
 			for(int col = 0;col<colSize;col++){
 				res[row][col] = mat[row][col].doubleValue() + scalarValue.doubleValue();
 			}
 		}
-		return new Matrix(res);
+		return new Matrix<>(res);
 	}
 	
-	public Matrix add(Matrix other){			
+	public Matrix<Double> add(Matrix other){			
 		if(requiresBroadcasting(other)){
 			return broadcastedArithmetic(other,this,Arithmetic.ADD);			
 		}				
@@ -210,20 +211,20 @@ public class Matrix<T extends Number>{
 				res[i][j] = mat[i][j].doubleValue() + other.mat[i][j].doubleValue();
 			}
 		}
-		return new Matrix(res);
+		return new Matrix<>(res);
 	}
 	
-	public <E extends Number>Matrix multiply(E scalarValue){
+	public <E extends Number>Matrix<Double> multiply(E scalarValue){
 		initializeResultantMatrix(rowSize,colSize);
 		for(int row = 0;row<rowSize;row++){
 			for(int col = 0;col<colSize;col++){
 				res[row][col] = mat[row][col].doubleValue()*scalarValue.doubleValue();
 			}
 		}
-		return new Matrix(res);
+		return new Matrix<>(res);
 		
 	}
-	public Matrix multiply(Matrix other){		
+	public Matrix<Double> multiply(Matrix other){		
 		
 		if(requiresBroadcasting(other)){
 			return broadcastedArithmetic(other,this,Arithmetic.MUL);
@@ -241,7 +242,7 @@ public class Matrix<T extends Number>{
 		
 		stopCounter(); 
 		setTimeTaken();
-		return new Matrix(res);
+		return new Matrix<>(res);
 	}
 	
 	private void logBroadcastException(){
@@ -324,10 +325,24 @@ public class Matrix<T extends Number>{
 				}
 			}
 		}
-		return new Matrix(res);
+		return new Matrix<Double>(res);
 		
 	}
 	
+	/**
+	 * returns the maximum value in the entire matrix.
+	 */
+	public double max(){
+		startCounter();		
+		double max =  Arrays.stream(mat)
+						.flatMap(Arrays::stream)
+						.mapToDouble(x->x == null?0:x.doubleValue())
+						.max().getAsDouble();
+		stopCounter();
+		setTimeTaken();
+		
+		return max;		
+	}
 	
 	/*
 	 * startCounter, stopCounter, & setTimeTaken are used all together at the same
@@ -386,7 +401,7 @@ public class Matrix<T extends Number>{
 	}
 	
 	
-	public void parallelAdd(Matrix other){
+	public void parallelAdd(Matrix<T> other){
 		initializeResultantMatrix(other.rowSize,other.colSize);
 		startCounter();
 		
