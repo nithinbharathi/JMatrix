@@ -332,16 +332,48 @@ public class Matrix<T extends Number>{
 	/**
 	 * returns the maximum value in the entire matrix.
 	 */
-	public double max(){
-		startCounter();		
-		double max =  Arrays.stream(mat)
+	public double max(){	
+		return Arrays.stream(mat)
 						.flatMap(Arrays::stream)
 						.mapToDouble(x->x == null?0:x.doubleValue())
-						.max().getAsDouble();
-		stopCounter();
-		setTimeTaken();
-		
-		return max;		
+						.max().getAsDouble();			
+	}
+	
+	/**
+	 * computes the maximum value across the specified axis of a 2d matrix.
+	 * A 2 dimensional matrix has 2 axes: vertical axis that runs along the 
+	 * columns and a horizontal axis that runs along each row. An axis value
+	 * of 1 computes the max across all the columns for each row and a value
+	 * of 0 computes the max across all the rows of for each column.
+	 */
+	public ArrayList<Double> max(int axis){
+		ArrayList<Double>maxNumbers = new ArrayList<>();
+		if(axis == 1){
+			for(int row = 0;row<rowSize;row++){
+				double maxNumber = Double.MIN_VALUE;
+				for(int col = 0;col<colSize;col++){
+					maxNumber = Math.max(mat[row][col].doubleValue(),maxNumber);
+				}
+				maxNumbers.add(maxNumber);
+			}
+		}else if(axis == 0){			
+			for(int col = 0;col<colSize;col++){
+				double maxNumber = Double.MIN_VALUE;
+				for(int row = 0;row<rowSize;row++){
+					maxNumber = Math.max(mat[row][col].doubleValue(),maxNumber);
+				}
+				maxNumbers.add(maxNumber);
+			}
+		}else {
+			try {
+				throw new Exception("Invalid parameter value for axis");
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+		return maxNumbers;
 	}
 	
 	/*
