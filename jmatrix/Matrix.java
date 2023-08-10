@@ -182,7 +182,10 @@ public class Matrix<T extends Number>{
 	
 	public double sum(){
 		startCounter();
-		double sum = Arrays.stream(res).parallel().mapToDouble(x->x[0]).sum();
+		double sum = Arrays.stream(mat)
+					.flatMap(Arrays::stream)
+					.mapToDouble(x->x.doubleValue())
+					.sum();
 		stopCounter();
 		setTimeTaken();	
 		return sum;
@@ -335,7 +338,7 @@ public class Matrix<T extends Number>{
 	public double max(){	
 		return Arrays.stream(mat)
 						.flatMap(Arrays::stream)
-						.mapToDouble(x->x == null?0:x.doubleValue())
+						.mapToDouble(x->x.doubleValue())
 						.max().getAsDouble();			
 	}
 	
