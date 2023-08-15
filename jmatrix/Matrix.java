@@ -192,7 +192,8 @@ public class Matrix<T extends Number>{
 	}
 	
 	/**
-	 * adds the given scalar to all the elements of the matrix and returns a new instance.
+	 * adds the given scalar to all the elements of the matrix 
+	 * and returns a new instance of the resultant matrix.
 	 */
 	public <E extends Number>Matrix<Double> add(E scalarValue){
 		initializeResultantMatrix(rowSize,colSize);
@@ -204,9 +205,15 @@ public class Matrix<T extends Number>{
 		return new Matrix<>(res);
 	}
 	
+	/**
+	 * Performs matrix addition. If the matrices involved in the operation 
+	 * differ in their dimensions but follow the broadcasting rules, the operation
+	 * is performed by "broadcasting" the smaller matrix across the larger one. This
+	 * is done without creating additional copies of the matrix.
+	 */
 	public Matrix<Double> add(Matrix other){			
 		if(requiresBroadcasting(other)){
-			return broadcastedArithmetic(other,this,Arithmetic.ADD);			
+			return broadcastedArithmetic(this,other,Arithmetic.ADD,false);			
 		}				
 		initializeResultantMatrix(rowSize,colSize);		
 		for(int i =0;i<rowSize;i++){
@@ -217,6 +224,43 @@ public class Matrix<T extends Number>{
 		return new Matrix<>(res);
 	}
 	
+	/**
+	 * substracts the scalar value from all the numbers of the matrix
+	 * and returns a new instance of the resultant matrix.
+	 */
+	public <E extends Number> Matrix<Double> subtract(E scalarValue){
+		initializeResultantMatrix(rowSize,colSize);
+		for(int row = 0;row<rowSize;row++){
+			for(int col = 0;col<colSize;col++){
+				res[row][col] = mat[row][col].doubleValue()-scalarValue.doubleValue();
+			}
+		}
+		return new Matrix<>(res);
+	}
+	
+	/**
+	 * Performs matrix subtraction. If the matrices involved in the operation 
+	 * differ in their dimensions but follow the broadcasting rules, the operation
+	 * is performed by "broadcasting" the smaller matrix across the larger one. This
+	 * is done without creating additional copies of the matrix.
+	 */
+	public Matrix<Double> subtract(Matrix other){
+		initializeResultantMatrix(rowSize,colSize);
+		if(requiresBroadcasting(other)){
+			return broadcastedArithmetic(this,other,Arithmetic.SUB,false);
+		}
+		for(int row = 0;row<rowSize;row++){
+			for(int col = 0;col<colSize;col++){
+				res[row][col] = mat[row][col].doubleValue() - other.mat[row][col].doubleValue();
+			}
+		}
+		return new Matrix<>(res);
+	}
+	
+	/**
+	 * multiplies the matrix numbers with the scalar value passed as input
+	 * and returns a new instance of the resultant matrix.
+	 */
 	public <E extends Number>Matrix<Double> multiply(E scalarValue){
 		initializeResultantMatrix(rowSize,colSize);
 		for(int row = 0;row<rowSize;row++){
@@ -227,11 +271,17 @@ public class Matrix<T extends Number>{
 		return new Matrix<>(res);
 		
 	}
-	public Matrix<Double> multiply(Matrix other){		
-		
+	
+	/**
+	 * Performs matrix multiplication.If the matrices involved in the operation 
+	 * differ in their dimensions but follow the broadcasting rules, the operation
+	 * is performed by "broadcasting" the smaller matrix across the larger one. This
+	 * is done without creating additional copies of the matrix.Note that this uses 
+	 * the standard algorithm for matrix multiplication that runs in O(N*N*N) 
+	 */
+	public Matrix<Double> multiply(Matrix other){				
 		if(requiresBroadcasting(other)){
-			return broadcastedArithmetic(other,this,Arithmetic.MUL);
-			
+			return broadcastedArithmetic(this,other,Arithmetic.MUL,false);			
 		}		
 		initializeResultantMatrix(this.rowSize,other.colSize);
 		startCounter();		
@@ -281,13 +331,12 @@ public class Matrix<T extends Number>{
 	 * verifies if the matrix involved in the operation can be broadcasted based on the rules:
 	 * https://numpy.org/doc/stable/user/basics.broadcasting.html#general-broadcasting-rules
 	 */
-	private boolean isBroadcastable(Matrix other){
-		if(other.colSize == colSize){
-			return other.rowSize == 1 || this.rowSize == 1;
-		}else if(other.rowSize == rowSize) {
-			return this.colSize == 1 || other.colSize == 1;
-		}
-			
+	private boolean isBroadcastable(Matrix mat1,Matrix mat2){
+		if(mat1.colSize == mat2.colSize){
+			return mat1.rowSize == 1 || mat2.rowSize == 1;
+		}else if(mat1.rowSize == mat2.rowSize) {
+			return mat1.colSize == 1 || mat2.colSize == 1;
+		}			
 		return false;
 	}
 	
@@ -300,36 +349,38 @@ public class Matrix<T extends Number>{
 	 * involved in the operation do not satisfy the broadcasting rules, InvalidDimensionForBroadCasting 
 	 * exception is thrown.
 	 */	
-
-	private Matrix broadcastedArithmetic(Matrix mat1,Matrix mat2, Arithmetic operation){
-		if(!isBroadcastable(mat1)){
+	private Matrix broadcastedArithmetic(Matrix mat1,Matrix mat2, Arithmetic operation, boolean reOrdered){
+		if(!isBroadcastable(mat1,mat2)){
 			logBroadcastException();
 			return this;
 		}
 		if(mat1.rowSize != 1 && mat1.colSize != 1){
-			return broadcastedArithmetic(mat2,mat1,operation);
+			return broadcastedArithmetic(mat2,mat1,operation,true); // note that the matrices are swapped
 		}
 		
-		int row = Math.max(mat1.rowSize,mat2.rowSize);
-		int col  = Math.max(mat1.colSize, mat2.colSize);
+		int rows = Math.max(mat1.rowSize,mat2.rowSize);
+		int cols  = Math.max(mat1.colSize, mat2.colSize);
 		
-		initializeResultantMatrix(row,col);
+		initializeResultantMatrix(rows,cols);
 		
 		if(mat1.rowSize == 1){
-			for(int i = 0;i<row;i++){
-				for(int j = 0;j<col;j++){					
-					res[i][j] = performArithmetic(operation,mat2.mat[i][j].doubleValue(),mat1.mat[0][j].doubleValue());
+			for(int row = 0;row<rows;row++){
+				for(int col = 0;col<cols;col++){					
+					res[row][col] = performArithmetic(operation,
+									reOrdered?mat2.mat[row][col].doubleValue():mat1.mat[0][col].doubleValue(), // a-b != b-a
+									reOrdered?mat1.mat[0][col].doubleValue():mat2.mat[row][col].doubleValue());
 				}
 			}
 		}else{
-			for(int i = 0;i<row;i++){
-				for(int j = 0;j<col;j++){					
-					res[j][i] = performArithmetic(operation,mat2.mat[j][i].doubleValue(),mat1.mat[j][0].doubleValue());
+			for(int col = 0;col<cols;col++){
+				for(int row = 0;row<rows;row++){
+					res[row][col] = performArithmetic(operation,
+									reOrdered?mat2.mat[row][col].doubleValue():mat1.mat[row][0].doubleValue(),
+									reOrdered?mat1.mat[row][0].doubleValue():mat2.mat[row][col].doubleValue());
 				}
-			}
+			}		
 		}
-		return new Matrix<Double>(res);
-		
+		return new Matrix<Double>(res);		
 	}
 	
 	/**
