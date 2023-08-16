@@ -49,14 +49,15 @@ public class Matrix<T extends Number>{
 	private int arrayDimensions[];
 	
 	/**
-	 * runtime available count to determine the number of the threads that could
+	 * Runtime available count to determine the number of the threads that could
 	 * possibly be created to speed of parallel calculations.
 	 */
 	private int processorCapacity = Math.max(1, Runtime.getRuntime().availableProcessors()-1);
 	
 	/**
-	 * a static string representation of the 2 dimensional array that is computed only once.
-	 * Primarily used when the view method is invoked on Matrix object.
+	 * Used for displaying a static string representation of the 2 
+	 * dimensional array that is computed only once. Primarily used 
+	 * when the view method is invoked on Matrix object.
 	 */
 	StringBuilder matrixRepresentation = null;
 	
@@ -70,7 +71,7 @@ public class Matrix<T extends Number>{
 	}
 	
 	/**
-	 * accepts a single dimensional array and transforms it into a matrix 
+	 * Accepts a single dimensional array and transforms it into a matrix 
 	 * based on the dimensions specified during instantiation.
 	 * @param mat
 	 * @param rowSize
@@ -84,7 +85,7 @@ public class Matrix<T extends Number>{
 	}
 	
 	/**
-	 * accepts a 2d array as specified during instantiation. This constructor 
+	 * Accepts a 2d array as specified during instantiation. This constructor 
 	 * does not require the dimensions to be specified explicity as the length 
 	 * propery of the array will used to arrive at those values.
 	 * @param mat
@@ -113,21 +114,21 @@ public class Matrix<T extends Number>{
 	}
 	
 	/*
-	 * sets the array dimensions that are later used to create a new instance at runtime.
+	 * Sets the array dimensions that are later used to create a new instance at runtime.
 	 */
 	private int[] setArrayDimensions(int rowSize,int colSize){
 		return new int[]{rowSize,colSize};
 	}
 	
 	/*
-	 * returns a 2 dimensional array based on the type of class instantiated at runtime.
+	 * Returns a 2 dimensional array based on the type of class instantiated at runtime.
 	 */
 	private T[][] getArray(Class<?> componentType,int dimensions[]){
 		return (T[][])Array.newInstance(componentType, dimensions);
 	}
 	
 	/*
-	 * checks if the matrix could be represented using the specified dimensions 
+	 * Checks if the matrix could be represented using the specified dimensions 
 	 */
 	private void validateDimensions(int len){
 		if(rowSize*colSize != len || len == 0){
@@ -192,7 +193,7 @@ public class Matrix<T extends Number>{
 	}
 	
 	/**
-	 * adds the given scalar to all the elements of the matrix 
+	 * Adds the given scalar to all the elements of the matrix 
 	 * and returns a new instance of the resultant matrix.
 	 */
 	public <E extends Number>Matrix<Double> add(E scalarValue){
@@ -225,7 +226,7 @@ public class Matrix<T extends Number>{
 	}
 	
 	/**
-	 * substracts the scalar value from all the numbers of the matrix
+	 * Substracts the scalar value from all the numbers of the matrix
 	 * and returns a new instance of the resultant matrix.
 	 */
 	public <E extends Number> Matrix<Double> subtract(E scalarValue){
@@ -258,7 +259,7 @@ public class Matrix<T extends Number>{
 	}
 	
 	/**
-	 * multiplies the matrix numbers with the scalar value passed as input
+	 * Multiplies the matrix numbers with the scalar value passed as input
 	 * and returns a new instance of the resultant matrix.
 	 */
 	public <E extends Number>Matrix<Double> multiply(E scalarValue){
@@ -328,7 +329,7 @@ public class Matrix<T extends Number>{
 	
 	
 	/*
-	 * verifies if the matrix involved in the operation can be broadcasted based on the rules:
+	 * Verifies if the matrix involved in the operation can be broadcasted based on the rules:
 	 * https://numpy.org/doc/stable/user/basics.broadcasting.html#general-broadcasting-rules
 	 */
 	private boolean isBroadcastable(Matrix mat1,Matrix mat2){
@@ -345,7 +346,7 @@ public class Matrix<T extends Number>{
 	}
 	
 	/*
-	 * broadcasting implementations for the arithmetic operations. If the matrices
+	 * Broadcasting implementations for the arithmetic operations. If the matrices
 	 * involved in the operation do not satisfy the broadcasting rules, InvalidDimensionForBroadCasting 
 	 * exception is thrown.
 	 */	
@@ -354,12 +355,13 @@ public class Matrix<T extends Number>{
 			logBroadcastException();
 			return this;
 		}
-		if(mat1.rowSize != 1 && mat1.colSize != 1){
-			return broadcastedArithmetic(mat2,mat1,operation,true); // note that the matrices are swapped
-		}
-		
+				
 		int rows = Math.max(mat1.rowSize,mat2.rowSize);
 		int cols  = Math.max(mat1.colSize, mat2.colSize);
+		
+		if(mat2.rowSize != rows || mat2.colSize != cols){ // broadcastin is always done on mat2 so making sure mat2 is the larger matrix.
+			return broadcastedArithmetic(mat2,mat1,operation,true); // note that the matrices are swapped
+		}
 		
 		initializeResultantMatrix(rows,cols);
 		
@@ -384,7 +386,7 @@ public class Matrix<T extends Number>{
 	}
 	
 	/**
-	 * returns the maximum value in the entire matrix.
+	 * Returns the maximum value in the entire matrix.
 	 */
 	public double max(){	
 		return Arrays.stream(mat)
@@ -394,7 +396,7 @@ public class Matrix<T extends Number>{
 	}
 	
 	/**
-	 * computes the maximum value across the specified axis of a 2d matrix.
+	 * Computes the maximum value across the specified axis of a 2d matrix.
 	 * A 2 dimensional matrix has 2 axes: vertical axis that runs along the 
 	 * columns and a horizontal axis that runs along each row. An axis value
 	 * of 1 computes the max across all the columns for each row and a value
@@ -462,8 +464,13 @@ public class Matrix<T extends Number>{
 		threadPool.clear();
 	}
 	
+	public static Matrix zeros(int rowSize, int colSize){
+		Double zeroMatrix[][] = new Double[rowSize][colSize];
+		return new Matrix(zeroMatrix);
+	}
+	
 	/**
-	 * computes the matrix multiplication between two matrices parallely. The number of the threads
+	 * Computes the matrix multiplication between two matrices parallely. The number of the threads
 	 * that operate on the matrix is determined by the number of processors that system has.
 	 */
 	public void parallelMultiply(Matrix other){
@@ -485,8 +492,7 @@ public class Matrix<T extends Number>{
 		createOrResetThreadPool();
 		
 	}
-	
-	
+		
 	public void parallelAdd(Matrix<T> other){
 		initializeResultantMatrix(other.rowSize,other.colSize);
 		startCounter();
@@ -519,7 +525,9 @@ public class Matrix<T extends Number>{
 	}
 	
 	/**
-	 * 
+	 * Once the count of the threads that could be created reaches
+	 * the threshold, this method is invoked for the created threads
+	 * to terminate after their execution is complete. 
 	 */
 	private void waitForThreads(){
 		for(Thread thread: threadPool){
@@ -532,7 +540,7 @@ public class Matrix<T extends Number>{
 	}
 	
 	/**
-	 * classes that implement the parallel task for several numerical operations.
+	 * Classes that implement the parallel task for several numerical operations.
 	 *
 	 */
 	private class MultiplierTask implements Runnable{		
