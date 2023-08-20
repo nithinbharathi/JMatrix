@@ -241,6 +241,7 @@ public class Matrix<T extends Number>{
 		if(this.rowSize == 1 && this.colSize == 1){
 			return other.add(this.mat[0][0]);
 		}
+		throwInvalidDimensionException();
 		return other;
 	}
 	
