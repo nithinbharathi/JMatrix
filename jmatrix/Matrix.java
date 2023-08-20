@@ -491,20 +491,26 @@ public class Matrix<T extends Number>{
 		threadPool.clear();
 	}
 	
+	/**
+	 * Returns a 2 dimensional matrix with the given dimensions filled with zeros.
+	 */
 	public static Matrix zeros(int rowSize, int colSize){
 		Double zeroMatrix[][] = new Double[rowSize][colSize];
 		setZeros(zeroMatrix,rowSize,colSize);
 		return new Matrix(zeroMatrix);
 	}
 	
+	/**
+	 * Returns a 1 dimensional vector filled with zeros.
+	 */
+	public static Matrix zeros(int colSize){
+		return zeros(1,colSize);
+	}
+	
 	private static void setZeros(Double matrix[][],int rowSize,int colSize){
 		for(int row = 0;row<rowSize;row++){
 			Arrays.fill(matrix[row], 0D);
 		}
-	}
-	
-	private void setZeros(Double matrix[]){
-		Arrays.fill(matrix, 0D);
 	}
 	
 	/**
