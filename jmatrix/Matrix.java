@@ -22,12 +22,12 @@ public class Matrix<T extends Number>{
 	 * are stored. The capacity of the array depends on the
 	 * input dimensions provided by the user during instantiation.
 	 */
-	T mat[][];
+	private T mat[][];
 	
 	/**
 	 * The dimensions of the Matrix.
 	 */
-	int colSize,rowSize;
+	public final int colSize,rowSize;
 	
 	/**
 	 * Array buffer used to store the result of the matrix operations 
@@ -36,8 +36,8 @@ public class Matrix<T extends Number>{
 	private Double res[][];
 	
 	/**
-	 * Holds the value in nanoseconds for the amount of time spent on a 
-	 * numerical operation.
+	 * Holds the value in nanoseconds to denote the amount of time spent
+	 * on a numerical operation.
 	 */
 	public long timeTaken;
 	
@@ -59,7 +59,7 @@ public class Matrix<T extends Number>{
 	 * dimensional array that is computed only once. Primarily used 
 	 * when the view method is invoked on Matrix object.
 	 */
-	StringBuilder matrixRepresentation = null;
+	private StringBuilder matrixRepresentation = null;
 	
 	private ArrayList<Thread>threadPool;
 	
@@ -138,6 +138,19 @@ public class Matrix<T extends Number>{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		}
+	}
+	private boolean standardArithmeticApplicable(Matrix mat1, Matrix mat2, Arithmetic OPERATION){
+		return OPERATION == Arithmetic.MUL?mat1.colSize == mat2.rowSize:
+				(mat1.rowSize == mat2.rowSize
+				&& mat1.colSize == mat2.colSize);
+	}
+	private void throwInvalidDimensionException(){
+		try {
+			throw new Exception("Invalid Dimensions for the matrices involved in the arithmetic operation.");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
@@ -269,8 +282,7 @@ public class Matrix<T extends Number>{
 				res[row][col] = mat[row][col].doubleValue()*scalarValue.doubleValue();
 			}
 		}
-		return new Matrix<>(res);
-		
+		return new Matrix<Double>(res);		
 	}
 	
 	/**
@@ -280,16 +292,30 @@ public class Matrix<T extends Number>{
 	 * is done without creating additional copies of the matrix.Note that this uses 
 	 * the standard algorithm for matrix multiplication that runs in O(N*N*N) 
 	 */
-	public Matrix<Double> multiply(Matrix other){				
-		if(requiresBroadcasting(other)){
-			return broadcastedArithmetic(this,other,Arithmetic.MUL,false);			
-		}		
-		initializeResultantMatrix(this.rowSize,other.colSize);
+	public Matrix<Double> multiply(Matrix other){		
+		if(isBroadcastable(this,other)){
+			return broadcastedArithmetic(this,other,Arithmetic.MUL,false);		
+		}
+		if(standardArithmeticApplicable(this,other,Arithmetic.MUL)){
+			return standardArithmeticMultiply(other);
+		}
+		if(other.rowSize == 1 && other.colSize == 1){
+			return multiply(other.mat[0][0]);
+		}
+		if(this.rowSize == 1 && this.colSize == 1){
+			return other.multiply(this.mat[0][0]);
+		}
+		throwInvalidDimensionException();	
+		return other;
+	}
+	
+	private Matrix<Double> standardArithmeticMultiply(Matrix mat2){
+		initializeResultantMatrix(this.rowSize,mat2.colSize);
 		startCounter();		
 		for(int i = 0;i<rowSize;i++){			
 			for(int z = 0;z<colSize;z++){
-				for(int j = 0;j<other.colSize;j++){
-					res[i][j] += mat[i][z].doubleValue() * other.mat[z][j].doubleValue();
+				for(int j = 0;j<mat2.colSize;j++){
+					res[i][j] += mat[i][z].doubleValue() * mat2.mat[z][j].doubleValue();
 				}
 			}
 		}
@@ -330,15 +356,19 @@ public class Matrix<T extends Number>{
 	
 	/*
 	 * Verifies if the matrix involved in the operation can be broadcasted based on the rules:
-	 * https://numpy.org/doc/stable/user/basics.broadcasting.html#general-broadcasting-rules
+	 * https://numpy.org/doc/stable/user/basics.broadcasting.html#general-broadcasting-rules.
+	 * In the case of 2D matrices all we have to check is, if mat1 is a col or row vector, mat2
+	 * should have the same row or col size respectively as mat1.
 	 */
 	private boolean isBroadcastable(Matrix mat1,Matrix mat2){
+		boolean isBroadcastable = false;
 		if(mat1.colSize == mat2.colSize){
-			return mat1.rowSize == 1 || mat2.rowSize == 1;
-		}else if(mat1.rowSize == mat2.rowSize) {
-			return mat1.colSize == 1 || mat2.colSize == 1;
+			isBroadcastable |= mat1.rowSize == 1 || mat2.rowSize == 1;
+		}
+		if(mat1.rowSize == mat2.rowSize) {
+			isBroadcastable |= mat1.colSize == 1 || mat2.colSize == 1;
 		}			
-		return false;
+		return isBroadcastable;
 	}
 	
 	private boolean requiresBroadcasting(Matrix mat){
@@ -346,26 +376,22 @@ public class Matrix<T extends Number>{
 	}
 	
 	/*
-	 * Broadcasting implementations for the arithmetic operations. If the matrices
-	 * involved in the operation do not satisfy the broadcasting rules, InvalidDimensionForBroadCasting 
-	 * exception is thrown.
+	 * Broadcasting implementation for the arithmetic operations. If the matrices
+	 * involved in the operation do not satisfy the broadcasting rules, then
+	 * InvalidDimensionForBroadCasting exception is thrown else the smaller matrix 
+	 * is extended across the larger matrix and the arithmetic is performed.
 	 */	
-	private Matrix broadcastedArithmetic(Matrix mat1,Matrix mat2, Arithmetic operation, boolean reOrdered){
-		if(!isBroadcastable(mat1,mat2)){
-			logBroadcastException();
-			return this;
-		}
-				
+	private Matrix<Double> broadcastedArithmetic(Matrix mat1,Matrix mat2, Arithmetic operation, boolean reOrdered){				
 		int rows = Math.max(mat1.rowSize,mat2.rowSize);
 		int cols  = Math.max(mat1.colSize, mat2.colSize);
 		
-		if(mat2.rowSize != rows || mat2.colSize != cols){ // broadcastin is always done on mat2 so making sure mat2 is the larger matrix.
-			return broadcastedArithmetic(mat2,mat1,operation,true); // note that the matrices are swapped
+		if(mat2.rowSize != rows || mat2.colSize != cols){ // broadcasting is always done on mat2 so making sure mat2 is the larger matrix.
+			return broadcastedArithmetic(mat2,mat1,operation,true); // note that the matrices are swapped.
 		}
 		
 		initializeResultantMatrix(rows,cols);
 		
-		if(mat1.rowSize == 1){
+		if(mat1.colSize == mat2.colSize && mat1.rowSize == 1){  //expand across rows when the columns of two matrices are equal and mat1 is a row vector.
 			for(int row = 0;row<rows;row++){
 				for(int col = 0;col<cols;col++){					
 					res[row][col] = performArithmetic(operation,
@@ -386,7 +412,7 @@ public class Matrix<T extends Number>{
 	}
 	
 	/**
-	 * Returns the maximum value in the entire matrix.
+	 * Returns the maximum value across the entire matrix.
 	 */
 	public double max(){	
 		return Arrays.stream(mat)
@@ -453,6 +479,7 @@ public class Matrix<T extends Number>{
 	
 	private void initializeResultantMatrix(int row, int col){
 		res = new Double[row][col];
+		setZeros(res,row,col);
 	}
 	
 	private boolean hasReachedProcessorCapacity(){
@@ -466,7 +493,18 @@ public class Matrix<T extends Number>{
 	
 	public static Matrix zeros(int rowSize, int colSize){
 		Double zeroMatrix[][] = new Double[rowSize][colSize];
+		setZeros(zeroMatrix,rowSize,colSize);
 		return new Matrix(zeroMatrix);
+	}
+	
+	private static void setZeros(Double matrix[][],int rowSize,int colSize){
+		for(int row = 0;row<rowSize;row++){
+			Arrays.fill(matrix[row], 0D);
+		}
+	}
+	
+	private void setZeros(Double matrix[]){
+		Arrays.fill(matrix, 0D);
 	}
 	
 	/**
@@ -489,8 +527,7 @@ public class Matrix<T extends Number>{
 		
 		stopCounter();
 		setTimeTaken();
-		createOrResetThreadPool();
-		
+		createOrResetThreadPool();		
 	}
 		
 	public void parallelAdd(Matrix<T> other){
@@ -510,8 +547,7 @@ public class Matrix<T extends Number>{
 		
 		stopCounter();
 		setTimeTaken();
-		createOrResetThreadPool();
-		
+		createOrResetThreadPool();	
 	}
 	
 	//todo
