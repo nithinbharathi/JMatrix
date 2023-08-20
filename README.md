@@ -43,8 +43,8 @@ public static void main(String[] args) {
 	mat2.view();
 	mat1.multiply(mat2);
 	System.out.printf("%.8f\n",mat1.timeTaken/1e9);
-	mat1.parallelMultiply(mat2);
-	mat1.result();
+	Matrix result = mat1.parallelMultiply(mat2);
+	result.view()
 	System.out.printf("%.8f\n",mat1.timeTaken/1e9);
   }
 		
