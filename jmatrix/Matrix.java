@@ -140,11 +140,14 @@ public class Matrix<T extends Number>{
 			}
 		}
 	}
+	
+
 	private boolean standardArithmeticApplicable(Matrix mat1, Matrix mat2, Arithmetic Operation){
 		return Operation == Arithmetic.MUL?mat1.colSize == mat2.rowSize:
 				(mat1.rowSize == mat2.rowSize
 				&& mat1.colSize == mat2.colSize);
 	}
+	
 	private void throwInvalidDimensionException(){
 		try {
 			throw new Exception("Invalid Dimensions for the matrices involved in the arithmetic operation.");
@@ -226,19 +229,21 @@ public class Matrix<T extends Number>{
 	 * is done without creating additional copies of the matrix.
 	 */
 	public Matrix<Double> add(Matrix other){			
-		if(requiresBroadcasting(other)){
+		if(isBroadcastable(this,other)){
 			return broadcastedArithmetic(this,other,Arithmetic.ADD,false);			
-		}				
-		initializeResultantMatrix(rowSize,colSize);		
-		for(int i =0;i<rowSize;i++){
-			for(int j =0;j<colSize;j++){
-				res[i][j] = mat[i][j].doubleValue() + other.mat[i][j].doubleValue();
-			}
+		}	
+		if(standardArithmeticApplicable(this, other,Arithmetic.ADD)){
+			return performStandardArithmetic(other,Arithmetic.ADD);
 		}
-		return new Matrix<>(res);
+		if(other.rowSize == 1 && other.colSize == 1){
+			return add(other.mat[0][0]);
+		}
+		if(this.rowSize == 1 && this.colSize == 1){
+			return other.add(this.mat[0][0]);
+		}
+		return other;
 	}
 	
-
 	private <E extends Number> Matrix<Double> subtract(E scalarValue,boolean reOrdered){
 		initializeResultantMatrix(rowSize,colSize);
 		for(int row = 0;row<rowSize;row++){
@@ -269,7 +274,7 @@ public class Matrix<T extends Number>{
 			return broadcastedArithmetic(this,other,Arithmetic.SUB,false);
 		}
 		if(standardArithmeticApplicable(this,other,Arithmetic.SUB)){
-			return standardArithmetic(other,Arithmetic.SUB);
+			return performStandardArithmetic(other,Arithmetic.SUB);
 		}
 		if(other.rowSize == 1 && other.colSize == 1){
 			return subtract(other.mat[0][0],false);
@@ -281,7 +286,7 @@ public class Matrix<T extends Number>{
 		return other;
 	}
 	
-	private Matrix<Double>standardArithmetic(Matrix other,Arithmetic operation){
+	private Matrix<Double>performStandardArithmetic(Matrix other,Arithmetic operation){
 		initializeResultantMatrix(rowSize,colSize);
 		for(int row = 0;row<rowSize;row++){
 			for(int col = 0;col<colSize;col++){
@@ -345,15 +350,6 @@ public class Matrix<T extends Number>{
 		return new Matrix<>(res);
 	}
 	
-	private void logBroadcastException(){
-		try {
-			throw new Exception("Invalid dimensions for broadcasting to be done.");
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
 	/* Utility method that computes different arithmetic operations. Broadcasting 
 	 * makes use of this method primarily and this helped reuse the code by avoiding 
 	 * the need to rewrite braodcasted implementations for different operations.
@@ -394,11 +390,7 @@ public class Matrix<T extends Number>{
 		}			
 		return isBroadcastable;
 	}
-	
-	private boolean requiresBroadcasting(Matrix mat){
-		return rowSize != mat.rowSize  || colSize != mat.colSize;
-	}
-	
+		
 	/*
 	 * Broadcasting implementation for the arithmetic operations. If the matrices
 	 * involved in the operation do not satisfy the broadcasting rules, then
