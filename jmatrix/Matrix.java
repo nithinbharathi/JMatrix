@@ -183,20 +183,6 @@ public class Matrix<T extends Number>{
 		
 	}
 	
-	public void result(){
-		if(res == null){
-			System.out.println("Resultant matrix is empty because no arithmetic operation was performed for this object");
-			return;
-		}
-		
-		for(int i = 0;i<res.length;i++){
-			for(int j = 0;j<res[0].length;j++){
-				System.out.print(res[i][j]+" ");
-			}
-			System.out.println();
-		}
-	}
-	
 	public double sum(){
 		startCounter();
 		double sum = Arrays.stream(mat)
