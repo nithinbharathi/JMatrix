@@ -140,8 +140,8 @@ public class Matrix<T extends Number>{
 			}
 		}
 	}
-	private boolean standardArithmeticApplicable(Matrix mat1, Matrix mat2, Arithmetic OPERATION){
-		return OPERATION == Arithmetic.MUL?mat1.colSize == mat2.rowSize:
+	private boolean standardArithmeticApplicable(Matrix mat1, Matrix mat2, Arithmetic Operation){
+		return Operation == Arithmetic.MUL?mat1.colSize == mat2.rowSize:
 				(mat1.rowSize == mat2.rowSize
 				&& mat1.colSize == mat2.colSize);
 	}
@@ -238,18 +238,24 @@ public class Matrix<T extends Number>{
 		return new Matrix<>(res);
 	}
 	
+
+	private <E extends Number> Matrix<Double> subtract(E scalarValue,boolean reOrdered){
+		initializeResultantMatrix(rowSize,colSize);
+		for(int row = 0;row<rowSize;row++){
+			for(int col = 0;col<colSize;col++){
+				res[row][col] = reOrdered?performArithmetic(Arithmetic.SUB,scalarValue.doubleValue(),mat[row][col].doubleValue())
+								: performArithmetic(Arithmetic.SUB,mat[row][col].doubleValue(),scalarValue.doubleValue());
+			}
+		}
+		return new Matrix<>(res);
+	}
+	
 	/**
 	 * Substracts the scalar value from all the numbers of the matrix
 	 * and returns a new instance of the resultant matrix.
 	 */
-	public <E extends Number> Matrix<Double> subtract(E scalarValue){
-		initializeResultantMatrix(rowSize,colSize);
-		for(int row = 0;row<rowSize;row++){
-			for(int col = 0;col<colSize;col++){
-				res[row][col] = mat[row][col].doubleValue()-scalarValue.doubleValue();
-			}
-		}
-		return new Matrix<>(res);
+	public <E extends Number> Matrix<Double>subtract(E scalarValue){
+		return subtract(scalarValue,false);
 	}
 	
 	/**
@@ -259,16 +265,30 @@ public class Matrix<T extends Number>{
 	 * is done without creating additional copies of the matrix.
 	 */
 	public Matrix<Double> subtract(Matrix other){
-		initializeResultantMatrix(rowSize,colSize);
-		if(requiresBroadcasting(other)){
+		if(isBroadcastable(this,other)){
 			return broadcastedArithmetic(this,other,Arithmetic.SUB,false);
 		}
+		if(standardArithmeticApplicable(this,other,Arithmetic.SUB)){
+			return standardArithmetic(other,Arithmetic.SUB);
+		}
+		if(other.rowSize == 1 && other.colSize == 1){
+			return subtract(other.mat[0][0],false);
+		}
+		if(this.rowSize == 1 && this.colSize == 1){
+			return other.subtract(this.mat[0][0],true);
+		}
+		throwInvalidDimensionException();	
+		return other;
+	}
+	
+	private Matrix<Double>standardArithmetic(Matrix other,Arithmetic operation){
+		initializeResultantMatrix(rowSize,colSize);
 		for(int row = 0;row<rowSize;row++){
 			for(int col = 0;col<colSize;col++){
-				res[row][col] = mat[row][col].doubleValue() - other.mat[row][col].doubleValue();
+				res[row][col] = performArithmetic(operation,mat[row][col].doubleValue(),other.mat[row][col].doubleValue());
 			}
 		}
-		return new Matrix<>(res);
+		return new Matrix(res);
 	}
 	
 	/**
@@ -334,6 +354,10 @@ public class Matrix<T extends Number>{
 		}
 	}
 	
+	/* Utility method that computes different arithmetic operations. Broadcasting 
+	 * makes use of this method primarily and this helped reuse the code by avoiding 
+	 * the need to rewrite braodcasted implementations for different operations.
+	 */
 	private double performArithmetic(Arithmetic operation,double operand1,double operand2){
 		double result = 0;		
 		switch(operation){
