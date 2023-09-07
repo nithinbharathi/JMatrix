@@ -517,6 +517,20 @@ public class Matrix<T extends Number>{
 	}
 	
 	/**
+	 * Returns a new instance of the matrix with all the numbers squared.
+	 */
+	public Matrix<Double> square() {
+		Double res[][] = new Double[rowSize][colSize];
+		for(int row = 0;row<rowSize;row++) {
+			for(int col = 0;col<colSize;col++) {
+				res[row][col] = mat[row][col].doubleValue()*mat[row][col].doubleValue();
+			}
+		}
+		return new Matrix(res);
+		
+	}
+	
+	/**
 	 * Computes the matrix multiplication between two matrices parallely. The number of the threads
 	 * that operate on the matrix is determined by the number of processors that system has.
 	 */
