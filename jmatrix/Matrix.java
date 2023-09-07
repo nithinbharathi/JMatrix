@@ -497,7 +497,7 @@ public class Matrix<T extends Number>{
 	/**
 	 * Returns a 2 dimensional matrix with the given dimensions filled with zeros.
 	 */
-	public static Matrix zeros(int rowSize, int colSize){
+	public static Matrix<Double> zeros(int rowSize, int colSize){
 		Double zeroMatrix[][] = new Double[rowSize][colSize];
 		setZeros(zeroMatrix,rowSize,colSize);
 		return new Matrix(zeroMatrix);
@@ -506,7 +506,7 @@ public class Matrix<T extends Number>{
 	/**
 	 * Returns a 1 dimensional vector filled with zeros.
 	 */
-	public static Matrix zeros(int colSize){
+	public static Matrix<Double> zeros(int colSize){
 		return zeros(1,colSize);
 	}
 	
