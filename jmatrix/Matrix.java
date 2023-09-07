@@ -175,7 +175,8 @@ public class Matrix<T extends Number>{
 	/**
 	 * Prints out the matrix representation of the current instance. Note that the running 
 	 * time  of this method is always constant after the first time this method is invoked 
-	 * because the view is cachedfor the subsequent calls. However, The first invocation costs O(row*col).
+	 * because the representation is cached using a stringbuilder object for the subsequent 
+	 * calls. However, The first invocation costs O(row*col).
 	 */
 	public void view(){	
 		if(matrixRepresentation == null)buildMatrix();		
