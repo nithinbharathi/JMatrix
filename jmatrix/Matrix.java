@@ -87,7 +87,7 @@ public class Matrix<T extends Number>{
 	/**
 	 * Accepts a 2d array as specified during instantiation. This constructor 
 	 * does not require the dimensions to be specified explicity as the length 
-	 * propery of the array will used to arrive at those values.
+	 * propery of the array will be used to arrive at those values.
 	 * @param mat
 	 */
 	public Matrix(T mat[][]){
